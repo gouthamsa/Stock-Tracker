@@ -4,42 +4,37 @@ import pprint
 import bs4
 import requests
 from bs4 import BeautifulSoup
-# api configuration 
+# api configuration
 
 scope = ['https://www.googleapis.com/auth/drive']
-credantials = ServiceAccountCredentials.from_json_keyfile_name('stockupdation-f8b999b001f4.json', scope)
-client = gspread.authorize(credantials)
-# accessing google sheet 'stocks'
+creds = ServiceAccountCredentials.from_json_keyfile_name('json_File', scope)
+client = gspread.authorize(creds)
+# accessing google_sheet using file_name
+sheet = client.open('#filename').sheet1
 
-sheet = client.open('stocks').sheet1
-#pprint is imported to print data clearly or neatly
-
+#using prettyprinter to print data clearly and neatly
 pp = pprint.PrettyPrinter()
-#accessing column "2" to spreadsheet which is symbols 
-
 stock_data = sheet.col_values(2)
-stock_list = []
-# appending data from column "2" to stock_list
 
+# Stock quotes list
+stock_list = []
 for i in stock_data:
     stock_list.append(i)
 pp.pprint(stock_data)
-# removing header of column
-
 refined = stock_list.pop(0)
-#print(stock_list)
 
+# Stock price Current value list  
 share_price = []
+# Finding stock price current values
 def price():    
-    for i in stock_list:
-        print(i)
-        nse = requests.get(f'https://in.finance.yahoo.com/quote/{i}.NS?p={i}.NS')
-        bse = requests.get(f"https://in.finance.yahoo.com/quote/{i}.BO?p={i}.BO")
-        if nse:
-           # drilling down to placeholder of current share price using BeautifulSoup
+    for stock in stock_list:
+        print(stock)
+
+        ns = requests.get(f'https://in.finance.yahoo.com/quote/{stock}.NS?p={stock}.NS')
+        bo = requests.get(f"https://in.finance.yahoo.com/quote/{stock}.BO?p={stock}.BO")
+        if ns:
            soup = bs4.BeautifulSoup(ns.text,'html')
            stock_price = soup.find_all('div',{'class':'My(6px) Pos(r) smartphone_Mt(6px)'})[0].find('span').text
-           #printing current price of share_company
            print(stock_price)
            share_price.append(stock_price)
         else:
@@ -51,11 +46,22 @@ def price():
 
 price()
 
-#updating googlesheet column  
-def update():
+# updating google sheets
+def update(alphabet):
     for i in range(len(share_price)):
-           #updating each row of column 'E'
-           sheet.update(f"E{i+2}",share_price[i])
+        sheet.update(f"{alphabet}{i+2}",share_price[i])
 
-update()
+# Finding row alphabet value using header value of sheet
+def find_column_alphabet():
+    for alphabet in range(len(sheet.row_values(1))):
+       if sheet.row_values(1)[alphabet] == "Current price":
+          update(chr(65 + alphabet))
+       else:
+           print("Current price Column not avaliable")  
+        
+find_column_alphabet()
+
+
+
+
 
