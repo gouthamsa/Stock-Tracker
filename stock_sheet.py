@@ -6,27 +6,9 @@ import requests
 from bs4 import BeautifulSoup
 # api configuration
 
-scope = ['https://www.googleapis.com/auth/drive']
-creds = ServiceAccountCredentials.from_json_keyfile_name('json_File', scope)
-client = gspread.authorize(creds)
-# accessing google_sheet using file_name
-sheet = client.open('#filename').sheet1
 
-#using prettyprinter to print data clearly and neatly
-pp = pprint.PrettyPrinter()
-stock_data = sheet.col_values(2)
-
-# Stock quotes list
-stock_list = []
-for i in stock_data:
-    stock_list.append(i)
-pp.pprint(stock_data)
-refined = stock_list.pop(0)
-
-# Stock price Current value list  
-share_price = []
 # Finding stock price current values
-def price():    
+def price(stock_list):    
     for stock in stock_list:
         print(stock)
 
@@ -43,25 +25,49 @@ def price():
            print(stock_price)
            share_price.append(stock_price)
     print(share_price)
+    return share_price
 
-price()
+
 
 # updating google sheets
-def update(alphabet):
+def update(alphabet,share_price):
     for i in range(len(share_price)):
         sheet.update(f"{alphabet}{i+2}",share_price[i])
 
 # Finding row alphabet value using header value of sheet
-def find_column_alphabet():
-    for alphabet in range(len(sheet.row_values(1))):
-       if sheet.row_values(1)[alphabet] == "Current price":
-          update(chr(65 + alphabet))
+def find_header(header_values):
+    for alphabet in range(len(header_values)):
+       if header_values[alphabet] == "Current price":
+          alpha = (chr(65 + alphabet))
+          return alpha
        else:
            print("Current price Column not avaliable")  
         
-find_column_alphabet()
 
+if __name__ == "__main__":
+    scope = ['https://www.googleapis.com/auth/drive']
+    creds = ServiceAccountCredentials.from_json_keyfile_name(json.file, scope)
+    client = gspread.authorize(creds)
+# accessing google_sheet using file_name
+    sheet = client.open('filename').sheet1
+    pp = pprint.PrettyPrinter()
+    stock_data = sheet.col_values(2)
 
+    # Stock quotes list
+    stock_list = []
+    for i in stock_data:
+        stock_list.append(i)
+    pp.pprint(stock_data)
+    #removing header
+    refined = stock_list.pop(0)
 
+    # Stock price Current value list  
+    share_price = []
+    
+    price(stock_list)
+    alpha = find_header(sheet.row_values(1))
+    print(alpha)
+    update(alpha,share_price)
+    
 
 
