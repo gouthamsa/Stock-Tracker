@@ -1,4 +1,4 @@
-# spread-sheet-project
+# StockTracker
 
 Used to find the current Stock Price of Stock ,
 Its done using Webscraping in python 
